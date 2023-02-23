@@ -1,0 +1,109 @@
+pragma solidity ^ 0.5.1; 
+                                 //version of compiler
+contract zakat                               //this is contract 
+{
+ uint256 private bankLiquidity;                     // Name and Balance of full Contract
+ address public owner; 
+mapping (address => uint256) 
+private customerBalance; 
+uint public ThresholdValue = 10; 
+uint public MaxEther= 50;
+
+struct Donatee                                //declare donatee struct
+{ 
+string name; 
+string id;
+ uint balance;
+}
+
+ mapping (address => Donatee) person; 
+address [] all_Donatee; 
+                                        //Function adding values to the mapping
+
+function add_Donatee(address _address, string memory _name, string memory _id) public 
+
+{
+ Donatee storage _person = person [_address];           //add_Donatee function
+_person.name = _name; 
+_person.id = _id;
+ _person.balance = 0; 
+all_Donatee.push(_address) -1;                  //Push returns length, which ends with a -1 
+}
+                            //perform the retrieval
+                   //we got  values from the mapping 
+
+function get_Donatees() view public returns (address [ ] memory)
+                                                                    //get_Donatee function
+{
+return all_Donatee;  
+}
+
+function check_Donetees_information (address _address)
+ view public returns(string memory name, string memory id, uint balance)
+                                                                    // check_Donatees function
+ {
+ Donatee storage _person = person[_address]; 
+balance = customerBalance[_address]; 
+return(_person.name, _person.id, balance);
+}
+
+constructor() public payable
+
+ {
+owner = msg.sender;
+customerBalance [msg.sender] += msg.value;
+}
+/*A contract's inheritable member known as an event records 
+the parameters passed when it is issued in the transaction logs.*/
+
+event fallbackCalled (address, uint256);
+ event deposit(address, uint256);
+ event withdrawal(address _address, uint256 ampunt);
+ event Suspect(address _address, uint amount, string message);
+ event MoneyLaundering (string p1);
+
+
+modifier ownerOnly() 
+{
+require(msg.sender == owner, "message.actually  sender is not the bank owner");_;
+}
+                               /* Customer Deposit payable function */ 
+
+function DonateFunds (address from, address to, uint256 RM) external payable returns (bool)
+                                  // Donatefund function
+{
+if (RM > ThresholdValue)
+{                                              // msg. sender.transfer(address(this).balance)
+customerBalance[from] -= RM; 
+customerBalance[to] += RM;  
+                                                 // require(RM <= ThresholdValue, "Warning")
+emit Suspect(from, RM, "Suspicious transection");
+}
+
+if (customerBalance[to] > MaxEther)
+{                                            // msg. sender.transfer(address(this). balance) 
+emit MoneyLaundering ("Laundering Alert!!!");
+}
+
+emit deposit(msg.sender, msg.value);
+return true;
+
+}
+                               
+function withdrawFunds (address _address, uint256 _value)
+ public payable 
+
+{
+require(_value <= customerBalance [_address], "Your account balance is low");
+ customerBalance [_address] -= _value;       
+                                               //msg.sender.transfer(_value) // Push funds 
+emit withdrawal(_address, _value);
+}
+                                                /* Fetch Customer Balance */ 
+function getCustomerBalance(address _address) public view returns(uint256)
+ {
+return customerBalance [_address];
+}
+
+}
+
